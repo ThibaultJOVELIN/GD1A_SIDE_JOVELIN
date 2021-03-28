@@ -3,7 +3,7 @@
 <head> 
     <meta charset="UTF-8" />
     <title>Titre</title>
-    <script src="//cdn.jsdelivr.net/npm/phaser@3.11.0/dist/phaser.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/phaser@3.50.1/dist/phaser.js"></script>
     <style type="text/css">
         body {
             margin: 0;
@@ -52,6 +52,7 @@ function preload ()
     this.load.image('bomb', 'assets/bomb.png');
     this.load.image('Fond', 'assets/Background.png')
     this.load.spritesheet('Heros', 'assets/Heros.png', { frameWidth: 52, frameHeight: 100 });
+    this.load.spritesheet('Vie', 'assets/Points_De_Vie.png', { frameWidth: 80, frameHeight: 80 });
     
 }
 
@@ -59,6 +60,7 @@ function create ()
 {
     //  A simple background for our game
     this.add.image(0, 0, 'Fond');
+    this.coeur = this.add.sprite(80,80,'Vie').setScrollFactor(0);
 
     //  The platforms group contains the ground and the 2 ledges we can jump on
     platforms = this.physics.add.staticGroup();
@@ -66,13 +68,29 @@ function create ()
 
     //  Here we create the ground.
     //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
-    platforms.create(50, 50, 'ground');
+    platforms.create(100, 200, 'ground');
 
     //  Now let's create some ledges
-    platforms.create(150, 100, 'ground');
-    wall.create(175, 175, 'wall');
-    platforms.create(250, 250, 'ground');
-    wall.create(300, 250, 'wall');
+    platforms.create(200, 400, 'ground');
+    platforms.create(400, 400, 'ground');
+    platforms.create(300, 400, 'ground');
+    platforms.create(475, 400, 'ground');
+
+    platforms.create(600, 600, 'ground');
+    platforms.create(700, 600, 'ground');
+    platforms.create(500, 600, 'ground');
+    platforms.create(400, 600, 'ground');
+    platforms.create(300, 550, 'ground');
+    platforms.create(200, 550, 'ground');
+    platforms.create(100, 550, 'ground');
+  
+    platforms.create(825, 475, 'ground');
+
+    platforms.create(650, 250, 'ground');
+    platforms.create(600, 250, 'ground');
+    wall.create(625, 400, 'wall');
+    wall.create(625, 300, 'wall');
+
 
     // The player and its settings
     player = this.physics.add.sprite(0, 0, 'Heros');
@@ -104,14 +122,14 @@ function create ()
 
     this.anims.create({
         key: 'rightjump',
-        frames: this.anims.generateFrameNumbers('Heros', { start: 22, end: 24 }),
+        frames: this.anims.generateFrameNumbers('Heros', { start: 23, end: 23 }),
         frameRate: 10,
         repeat: 1
     });
 
     this.anims.create({
         key: 'leftjump',
-        frames: this.anims.generateFrameNumbers('Heros', { start: 3, end: 5 }),
+        frames: this.anims.generateFrameNumbers('Heros', { start: 4, end: 4 }),
         frameRate: 10,
         repeat: -1
     });
@@ -129,6 +147,34 @@ function create ()
         frameRate: 10,
         repeat: -1
     });
+
+    this.anims.create({
+        key: 'Vie4',
+        frames: [ { key: 'Vie', frame: 0 } ],
+        frameRate: 20
+    });
+    this.anims.create({
+        key: 'Vie3',
+        frames: [ { key: 'Vie', frame: 1 } ],
+        frameRate: 20
+    });
+    this.anims.create({
+        key: 'Vie2',
+        frames: [ { key: 'Vie', frame: 2 } ],
+        frameRate: 20
+    });
+    this.anims.create({
+        key: 'Vie1',
+        frames: [ { key: 'Vie', frame: 3 } ],
+        frameRate: 20
+    });
+    this.anims.create({
+        key: 'Vie0',
+        frames: [ { key: 'Vie', frame: 4 } ],
+        frameRate: 20
+    });
+
+    this.life = 4;
 
     //  Input Events
     cursors = this.input.keyboard.createCursorKeys();
@@ -154,13 +200,14 @@ function create ()
 
     //  Collide the player and the stars with the platforms
     this.physics.add.collider(player, platforms);
+    this.physics.add.collider(player, wall);
     this.physics.add.collider(stars, platforms);
     this.physics.add.collider(bombs, platforms);
 
     //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
     this.physics.add.overlap(player, stars, collectStar, null, this);
 
-    this.cameras.main.startFollow(this.player)
+    this.cameras.main.startFollow(player)
 }
 
 function update ()
@@ -170,7 +217,9 @@ function update ()
         return;
     }
 
-    const touchingDown = this.player.body.touching.down
+    this.coeur.anims.play('Vie4',true)
+
+    const touchingDown = player.body.touching.down
 
     if (cursors.left.isDown && touchingDown)
     {
@@ -184,19 +233,23 @@ function update ()
 
         player.anims.play('right', true);
     }
-    if (cursors.up.isDown && touchingDown){
-        player.setVelocityY(-250)
+    
+    else if (cursors.up.isDown && touchingDown)
+    {
+        player.setVelocityY(-450);
+        player.anims.play('jump');
     }
+
     else if (cursors.right.isDown && !touchingDown)
     {
-        this.player.setVelocityX(160);
-        this.player.anims.play('rightjump', true);
+        player.setVelocityX(160);
+        player.anims.play('rightjump', true);
     }
 
     else if (cursors.left.isDown && !touchingDown)
     {
-    	this.player.setVelocityX(-160);
-    	this.player.anims.play('leftjump', true);
+    	player.setVelocityX(-160);
+    	player.anims.play('leftjump', true);
     }
 
     else
@@ -206,11 +259,7 @@ function update ()
         player.anims.play('normal');
     }
 
-    if (cursors.up.isDown && player.body.touching.down)
-    {
-        player.setVelocityY(-450);
-        player.anims.play('jump');
-    }
+    
 
 }
 
@@ -244,13 +293,26 @@ function collectStar (player, star)
 
 function hitBomb (player, bomb)
 {
-    this.physics.pause();
+    this.coeur.anims.play('Vie4',false)
+    this.life -= 1
+    if (this.life == 3){
+        this.coeur.anims.play('Vie3',true)
+    }
+    if (this.life == 2){
+        this.coeur.anims.play('Vie3',false)
+        this.coeur.anims.play('Vie2',true)
+    }
+    if (this.life == 1){
+        this.coeur.anims.play('Vie2',false)
+        this.coeur.anims.play('Vie1',true)
+    }
+    if (this.life == 0){
+        this.coeur.anims.play('Vie1',false)
+        this.coeur.anims.play('Vie0',true)
+        gameOver = true;
+    }
 
-    player.setTint(0xff0000);
-
-    player.anims.play('turn');
-
-    gameOver = true;
+   
 }
 
 </script>
